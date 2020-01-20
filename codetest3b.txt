@@ -1,0 +1,557 @@
+// elements of the array
+0025, 00
+0026, 08 // 1st element is 0008h
+0027, 00
+0028, 03 // 2nd element is 0003h
+0029, 00
+002A, 05 // 3rd element is 0005h
+002B, 00 
+002C, 0A // 4th element is 000Ah
+002D, 00
+002E, 0F // 5th element is 000Fh
+002F, 00
+0030, 0B // 6th element is 000Bh
+0031, 00
+0032, 02 // 7th element is 0002h
+0033, 00
+0034, 01 // 8th element is 0001h
+
+1000, 00 
+1001, 08 // length of the array is 0008h
+1010, 00 
+1011, 25 // starting location of the array is 0025h
+
+// temporary arrays L and R will be stored at the locations starting from 3050h and 3100h, respectively
+3000, 30 // locations 3000h and 3001h will store the starting address of the temporary array L
+3001, 50
+3002, 31 // locations 3002h and 3003h will store the starting address of the temporary array R
+3003, 00
+
+// main function
+// constants that are used in the void mergeSort(int arr[], int n) function are going to be stored in predefined locations:
+// * n - 1 - location number 0050h
+0100, 20 // LD 1000h - ACC = n
+0101, 10
+0102, 00
+0103, 7C // SUB #0001h - ACC = n - 1
+0104, 00
+0105, 01
+0106, 30 // ST 0050h - MEM[0050h] = n - 1
+0107, 00
+0108, 50
+// SP, by default, points towards location 1000h; for the purpose of not overriding the array length, SP's initial value will be 3200h
+0109, 2C // LD #3200h
+010A, 32
+010B, 00
+010C, FB // STSP - SP = 3200h
+// R0 - curr_size, R1 - left_start, R2 - mid, R3 - right_end
+// for (curr_size = 1; curr_size <= n - 1; curr_size *= 2)
+010D, 2C // LD #0001h
+010E, 00
+010F, 01
+0110, 38 // ST R0 - R0 = curr_size
+0111, 20 // LD 0050h - ACC = n - 1
+0112, 00
+0113, 50
+0114, 78 // SUB R0
+// if the ACC's value is < 0 - curr_size > n - 1, so the program breaks out of the first for loop
+0115, 0A // BNEG 42h - end1 - 0160h (end1) - 0117h = 0049h
+0116, 49
+// for (left_start = 0; left_start < n - 1; left_start += 2 * curr_size)
+0117, 2C // LD #0000h
+0118, 00
+0119, 00
+011A, 39 // ST R1 - R1 = left_start
+011B, 20 // LD 0050h - ACC = n - 1
+011C, 00
+011D, 50
+011E, 79 // SUB R1
+// if the ACC's value is <= 0 - left_start is >= n - 1, so the program breaks out of the nested for loop
+011F, 03 // BLEQ 32h - end2 - 015Ah (end2) - 0121h = 0039h
+0120, 39
+// if (left_start + curr_size - 1 < n - 1)
+0121, 29 // LD R1 - ACC = left_start
+0122, 68 // ADD R0 - ACC = left_start + curr_size
+0123, 7C // SUB #0001h - ACC = left_start + curr_size - 1
+0124, 00
+0125, 01
+// for the purpose of not having to do steps 011D - 0121 again (if the condition is pleased), left_start + curr_size - 1 will be stored at location number 0052h
+0126, 30 // ST 0052h - MEM[0052h] = left_start + curr_size - 1
+0127, 00
+0128, 52 
+0129, 70 // SUB 0050h
+012A, 00
+012B, 50
+//if the ACC's value is >= 0 - left_start + curr_size - 1 >= n - 1, so the program executes the else1 branch
+012C, 01 // BGRE 06h - else1 (0134 - 012E = 0006)
+012D, 06
+012E, 20 // LD 0052h - ACC = left_start + curr_size - 1
+012F, 00
+0130, 52
+// if the condition is pleased, program must not do the else1 branch
+0131, 10 // JMP 0137h
+0132, 01
+0133, 37
+// else1
+0134, 20 // LD 0050h - ACC = n - 1
+0135, 00
+0136, 50
+0137, 3A // ST R2 - R2 = mid
+// if (left_start + 2 * curr_size - 1 < n - 1)
+0138, 28 // LD R0 - ACC = curr_size
+0139, F5 // ASL - ACC = 2 * curr_size
+013A, 69 // ADD R1 - ACC = left_start + 2 * curr_size
+013B, 7C // SUB #0001h - ACC = left_start + 2 * curr_size - 1
+013C, 00
+013D, 01
+// for the purpose of not having to do steps 0131 - 0135 again (if the condition is pleased), left_start + 2 * curr_size - 1 will be stored at location number
+// 0052h
+013E, 30 // ST 0052h - MEM[0052h] = left_start + 2 * curr_size - 1
+013F, 00
+0140, 52
+0141, 70 // SUB 0050h
+0142, 00
+0143, 50
+// if the ACC's value is >= 0 - left_start + 2 * curr_size - 1 >= n - 1, so the  program executes the else2 branch
+0144, 01 // BGRE 06h - else2 (014C - 0146 = 0006)
+0145, 06
+0146, 20 // LD 0052h - ACC = left_start + 2 * curr_size - 1
+0147, 00
+0148, 52
+// if the condition is pleased, program must not do the else2 branch
+0149, 10 // JMP 014Fh
+014A, 01
+014B, 4F
+// else2
+014C, 20 // LD 0050h - ACC = n - 1
+014D, 00
+014E, 50
+014F, 3B // ST R3 - R3 = right_end
+// void merge(int arr[], int l, int m, int r) function starts from 2000h
+0150, 11 // JSR 2000h
+0151, 20
+0152, 00
+// updating left_start for the nested for loop
+0153, 28 // LD R0 - ACC = curr_size
+0154, F5 // ASL - ACC = 2 * curr_size
+0155, 69 // ADD R1 - ACC = 2 * curr_size + left_start
+0156, 39 // ST R1 - left_start = left_start + 2 * curr_size
+0157, 10 // JMP 011Bh - back to the beggining of the nested for loop 
+0158, 01
+0159, 1B
+// updating curr_size for the first for loop (end2)
+015A, 28 // LD R0 - ACC = curr_size
+015B, F5 // ASL - ACC = 2 * curr_size
+015C, 38 // ST R0 - curr_size = curr_size * 2
+015D, 10 // JMP 0111h - back to the beggining of the first for loop
+015E, 01
+015F, 11
+// end of program (end1)
+0160, FE // HALT
+
+
+
+// void merge(int arr[], int l, int m, int r); l == left_start(R1), m == mid(R2), r == right_end(R3)
+// variables used in the void merge(int arr[], int l, int m, int r) function will be stored at the predefined locations:
+// * i - 3004h and 3005h
+// * j - 3006h and 3007h
+// * k - 3008h and 3009h
+// * n1 - 300Ah and 300Bh
+// * n2 - 300Ch and 300Dh
+2000, 2A // LD R2 - ACC = m
+2001, 79 // SUB R1 - ACC = m - l
+2002, 6C // ADD #0001h - ACC = m - l + 1
+2003, 00
+2004, 01
+2005, 30 // ST 300Ah MEM[300Ah..300Bh] = n1
+2006, 30
+2007, 0A
+2008, 2B // LD R3 - ACC = r
+2009, 7A // SUB R2 - ACC = r - m
+200A, 30 // ST 300Ch - MEM[300Ch..300Dh] = n2
+200B, 30
+200C, 0C
+200D, 2C // LD #0000h
+200E, 00
+200F, 00
+2010, 30 // ST 3004h - i = 0
+2011, 30
+2012, 04
+2013, 30 // ST 3006h - j = 0
+2014, 30
+2015, 06
+// for (i = 0; i < n1; i++)
+2016, 20 // LD 3004h - ACC = i
+2017, 30
+2018, 04
+2019, 70 // SUB 300Ah - ACC = i - n1
+201A, 30
+201B, 0A
+// if the ACC's value is >= 0 - i >= n1, so the program breaks out of the for loop
+201C, 01 // BGRE 27h (2045h(end of for loop) - 201Eh = 27h)
+201D, 27
+// forming the address of L[i]:
+201E, 20 // LD 3004h - ACC = i
+201F, 30
+2020, 04
+2021, F5 // ASL - ACC = i * 2; IMPORTANT: One element of the array (any array) takes up TWO locations, so i must be multiplied by 2
+2022, 60 // ADD 3000h - ACC = L + i * 2 = address of L[i]
+2023, 30
+2024, 00
+// address of L[i] will be stored at a temporary location - 3010h and 3011h
+2025, 30 // ST 3010h
+2026, 30
+2027, 10
+// forming the address of arr[l+i]:
+2028, 29 // LD R1 - ACC = l
+2029, 60 // ADD 3004h - ACC = l + i
+202A, 30
+202B, 04
+202C, F5 // ASL - ACC = (l + i) * 2
+202D, 60 // ADD 1010h - ACC = arr + (l + i) * 2 = address of arr[l + i]
+202E, 10
+202F, 10
+// address of arr[l + i] will be stored at a temporary location - 3012h and 3013h
+2030, 30 // ST 3012h
+2031, 30
+2032, 12
+2033, 24 // LD (3012h) - ACC = arr[l + i]
+2034, 30
+2035, 12
+2036, 34 // ST (3010h) - L[i] = arr[l + i]
+2037, 30
+2038, 10
+// incrementing i for the for loop:
+2039, 20 // LD 3004h - ACC = i
+203A, 30
+203B, 04
+203C, 6C // ADD #0001h
+203D, 00
+203E, 01
+203F, 30 // ST 3004h - i = i + 1
+2040, 30
+2041, 04
+2042, 10 // JMP 2016h - back at the beggining of the for loop
+2043, 20
+2044, 16
+// for (j = 0; j < n2; j++)
+2045, 20 // LD 3006h - ACC = j
+2046, 30
+2047, 06
+2048, 70 // SUB 300Ch - ACC = j - n2
+2049, 30
+204A, 0C
+// if the ACC's value is >= 0 - j >= n2, so the program breaks out of the for loop
+204B, 01 // BGRE 2Ah (2077h - 204Dh = 2Ah)
+204C, 2A
+// forming the address of R[j]:
+204D, 20 // LD 3006h - ACC = j
+204E, 30
+204F, 06
+2050, F5 // ASL - ACC = j * 2
+2051, 60 // ADD 3002h - ACC = R + j * 2
+2052, 30
+2053, 02
+// address of R[j] will be stored at a temporary location - 3010h and 3011h
+2054, 30 // ST 3010h
+2055, 30
+2056, 10
+// forming the address of arr[m + 1 + j]
+2057, 2A // LD R2 - ACC = m
+2058, 6C // ADD #0001h - ACC = m + 1
+2059, 00
+205A, 01
+205B, 60 // ADD 3006h - ACC = m + 1 + j 
+205C, 30
+205D, 06
+205E, F5 // ASL - ACC = (m + 1 + j) * 2
+205F, 60 // ADD 1010h - ACC = arr + (m + 1 + j) * 2 = address of arr[m + 1 + j]
+2060, 10
+2061, 10
+// address of arr[m + 1 + j] will be stored at a temporary location 3012h and 3013h
+2062, 30 // ST 3012h
+2063, 30
+2064, 12
+2065, 24 // LD (3012h) - ACC = arr[m + 1 + j]
+2066, 30
+2067, 12
+2068, 34 // ST (3010h) - R[j] = arr[m + 1 + j]
+2069, 30
+206A, 10
+// incrementing j for the for loop
+206B, 20 // LD 3006h - ACC = j
+206C, 30
+206D, 06
+206E, 6C // ADD #0001h - ACC = j + 1
+206F, 00
+2070, 01
+2071, 30 // ST 3006h - j = j + 1
+2072, 30
+2073, 06
+2074, 10 // JMP 2045h - back at the beggining of the for loop
+2075, 20
+2076, 45
+2077, 2C // LD #0000h
+2078, 00
+2079, 00
+207A, 30 // ST 3004h - i = 0
+207B, 30
+207C, 04
+207D, 30 // ST 3006 - j = 0
+207E, 30
+207F, 06
+2080, 29 // LD R1 - ACC = l
+2081, 30 // ST 3008h - k = l
+2082, 30
+2083, 08
+// while (i < n1 && j < n2)
+2084, 20 // LD 3004h - ACC = i
+2085, 30
+2086, 04
+2087, 70 // SUB 300Ah - ACC = i - n1
+2088, 30
+2089, 0A
+// if the ACC's value is >= 0 - i >= n1, so the program breaks out of the while loop
+208A, 01 // BGRE 5Ch (20E8h (end of while loop) - 208Ch = 5Ch)
+208B, 5C
+208C, 20 // LD 3006h - ACC = j
+208D, 30
+208E, 06
+208F, 70 // SUB 300Ch - ACC = j - n2
+2090, 30
+2091, 0C
+// if the ACC's value is >= 0 - j >= n2, so the program breaks out of the while loop
+2092, 01 // BGRE 54h (20E8h (end of while loop) - 2094h = 54h)
+2093, 54
+// forming the address of L[i]:
+2094, 20 // LD 3004h - ACC = i
+2095, 30
+2096, 04
+2097, F5 // ASL - ACC = 2 * i
+2098, 60 // ADD 3000h - ACC = L + 2 * i = address of L[i]
+2099, 30
+209A, 00
+// address of L[i] will be stored at a temporary location - 3010h and 3011h
+209B, 30 // ST 3010h
+209C, 30
+209D, 10
+// forming the address of R[j]:
+209E, 20 // LD 3006h - ACC = j
+209F, 30
+20A0, 06
+20A1, F5 // ASL - ACC = 2 * j
+20A2, 60 // ADD 3002h - ACC = R + 2 * j = address of R[j]
+20A3, 30
+20A4, 02
+// address of R[j] will be stored at a temporary location - 3012h and 3013h
+20A5, 30 // ST 3012h
+20A6, 30
+20A7, 12
+// forming the address of arr[k]:
+20A8, 20 // LD 3008h - ACC = k
+20A9, 30
+20AA, 08
+20AB, F5 // ASL - ACC = 2 * k
+20AC, 60 // ADD 1010h - ACC = arr + 2 * k = address of arr[k]
+20AD, 10
+20AE, 10
+// address of arr[k] will be stored at a temporary location - 3014h and 3015h
+20AF, 30 // ST 3014h
+20B0, 30
+20B1, 14
+// if (L[i] <= R[j])
+20B2, 24 // LD (3010h) - ACC = L[i]
+20B3, 30
+20B4, 10
+20B5, 74 // SUB (3012h) - ACC = L[i] - R[j]
+20B6, 30
+20B7, 12
+// if the ACC's value is > 0 - L[i] > R[j], so the program executes the else branch
+20B8, 00 // BGRT 13h (20CDh - 20BAh = 13h)
+20B9, 13
+20BA, 24 // LD (3010h) - ACC = L[i]
+20BB, 30
+20BC, 10
+20BD, 34 // ST (3014h) - arr[k] = L[i]
+20BE, 30
+20BF, 14
+20C0, 20 // LD 3004h - ACC = i
+20C1, 30
+20C2, 04
+20C3, 6C // ADD #0001h - ACC = i + 1
+20C4, 00
+20C5, 01
+20C6, 30 // ST 3004h - i = i + 1
+20C7, 30
+20C8, 04
+20C9, 10 // JMP 20DCh - skip the else branch
+20CA, 20
+20CB, DC
+// else
+20CD, 24 // LD (3012h) - ACC = R[j]
+20CE, 30
+20CF, 12
+20D0, 34 // ST (3014h) - arr[k] = R[j]
+20D1, 30
+20D2, 14
+20D3, 20 // LD 3006h - ACC = j
+20D4, 30
+20D5, 06
+20D6, 6C // ADD #0001h - ACC = j + 1
+20D7, 00
+20D8, 01
+20D9, 30 // ST 3006h - j = j + 1
+20DA, 30
+20DB, 06
+20DC, 20 // LD 3008h - ACC = k
+20DD, 30
+20DE, 08
+20DF, 6C // ADD #0001h - ACC = k + 1
+20E0, 00
+20E1, 01
+20E2, 30 // ST 3008h - k = k + 1
+20E3, 30
+20E4, 08
+20E5, 10 // JMP 2084h - back at the beggining of the while loop
+20E6, 20
+20E7, 84
+// while (i < n1)
+20E8, 20 // LD 3004h - ACC = i
+20E9, 30
+20EA, 04
+20EB, 70 // SUB 3010h - ACC = i - n1
+20EC, 30
+20ED, 0A
+// if the ACC's value is >= 0 - i >= n1, so the program breaks out of the while loop
+20EE, 01 // BGRE 2Fh (211Fh (end of while loop) - 20F0h = 2Ch)
+20EF, 2F
+// forming the address of L[i]:
+20F0, 20 // LD 3004h - ACC = i
+20F1, 30
+20F2, 04
+20F3, F5 // ASL - ACC = 2 * i
+20F4, 60 // ADD 3000h - ACC = L + 2 * i = address of L[i] 
+20F5, 30
+20F6, 00
+// address of L[i] will be stored at a temporary location - 3010h and 3011h
+20F7, 30 // ST 3010h
+20F8, 30
+20F9, 10
+// forming the address of arr[k]:
+20FA, 20 // LD 3008h - ACC = k
+20FB, 30
+20FC, 08
+20FD, F5 // ASL - ACC = 2 * k
+20FE, 60 // ADD 1010h - ACC = arr + 2 * k = address of arr[k]
+20FF, 10
+2100, 10
+// address of arr[k] will be stored at a temporary location - 3012h and 3013h
+2101, 30 // ST  3012h
+2102, 30
+2103, 12
+2104, 24 // LD (3010h) - ACC = L[i]
+2105, 30
+2106, 10
+2107, 34 // ST (3012h) - arr[k] = L[i]
+2108, 30
+2109, 12
+210A, 20 // LD 3008h - ACC = k
+210B, 30
+210C, 08
+210D, 6C // ADD #0001h - ACC = k + 1 
+210E, 00
+210F, 01
+2110, 30 // ST 3008h - k = k + 1
+2111, 30
+2112, 08
+2113, 20 // LD 3004h - ACC = i
+2114, 30
+2115, 04
+2116, 6C // ADD #0001h - ACC = i + 1
+2117, 00
+2118, 01
+2119, 30 // ST 3004h - i = i + 1
+211A, 30
+211B, 04
+211C, 10 // JMP 20E8 - back at the beggining of the while loop
+211D, 20
+211E, E8
+// while (j < n2)
+211F, 20 // LD 3006h - ACC = j
+2120, 30
+2121, 06
+2122, 70 // SUB 300Ch - ACC = j - n2
+2123, 30
+2124, 0C
+// if the ACC's value is >= 0 - j >= n2, so the program breaks out of the while loop
+2125, 01 // BGRE 2Fh (2156h (end of while loop) - 2127h = 2Fh)
+2126, 2F
+// forming the address of R[j]:
+2127, 20 // LD 3006h - ACC = j
+2128, 30
+2129, 06
+212A, F5 // ASL - ACC = 2 * j
+212B, 60 // ADD 3002h - ACC = R + 2 * j = address of R[j]
+212C, 30
+212D, 02
+// address of R[j] will be stored at a temporary location - 3010h and 3011h
+212E, 30 // ST 3010h 
+212F, 30
+2130, 10
+// forming the address of arr[k]:
+2131, 20 // LD 3008h - ACC = k
+2132, 30
+2133, 08
+2134, F5 // ASL - ACC = 2 * k
+2135, 60 // ADD 1010h - ACC = arr + 2 * k = address of arr[k]
+2136, 10
+2137, 10
+// address of arr[k] will be stored at a temporary location - 3012h and 3013h
+2138, 30 // ST 3012h
+2139, 30
+213A, 12
+213B, 24 // LD (3010h) - ACC = R[j]
+213C, 30
+213D, 10
+213E, 34 // ST (3012h) - arr[k] = R[j]
+213F, 30
+2140, 12
+2141, 20 // LD 3008h - ACC = k
+2142, 30
+2143, 08
+2144, 6C // ADD #0001h - ACC = k + 1
+2145, 00
+2146, 01
+2147, 30 // ST 3008h - k = k + 1
+2148, 30
+2149, 08
+214A, 20 // LD 3006h - ACC = j
+214B, 30
+214C, 06
+214D, 6C // ADD #0001h - ACC = j + 1
+214E, 00
+214F, 01
+2150, 30 // ST 3006h - j = j + 1
+2151, 30
+2152, 06
+2153, 10 // JMP 211Fh - back at the beggining of the while loop
+2154, 21
+2155, 1F
+2156, F0 // RTS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
